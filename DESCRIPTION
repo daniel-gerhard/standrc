@@ -1,0 +1,10 @@
+Package: standrc
+Type: Package
+Title: Dose-response curves with stan
+Version: 0.0-1
+Date: 2014-12-09
+Author: Daniel Gerhard
+Maintainer: Daniel Gerhard <00gerhard@gmail.com>
+Description: A simplified user interface to fit specific dose-response models using rstan
+License: GPL-2
+Depends: rstan, drc, nlme

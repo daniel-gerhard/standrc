@@ -1,0 +1,6 @@
+export(standrm)
+import(rstan, drc, nlme)
+
+S3method(print, standrc)
+S3method(ranef, standrc)
+S3method(VarCorr, standrc)
