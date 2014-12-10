@@ -40,6 +40,9 @@ m <- standrm(SLOPE ~ DOSE, data=spinach,
 print(m)
 ranef(m)
 VarCorr(m)
+
+ED(m, respLev=c(25, 50, 75))
+
 }
 }
 

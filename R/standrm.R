@@ -10,10 +10,12 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, ...){
     stsp <- strsplit(as.character(curveid)[2], "+")[[1]]
     cin <- stsp[!stsp %in% c(" ", "+")]
     pnl <- sapply(fct$names, function(x) x %in% cin)
+    curvenames <- levels(as.factor(data[,cid]))
   } else {
     cid <- idc <- NULL
     J <- 1
     pnl <- rep(FALSE, length(fct$names))
+    curvenames <- NULL
   }
   
   if (!is.null(random)){
@@ -140,6 +142,9 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, ...){
   out$stan <- fit
   out$pars <- c(trap, "sigma_y")
   if (!is.null(random)) out$random <- c("slope", "lasy", "uasy", "ed", "assym")[pnlr] 
+  out$curves <- list(pars=pnl, J=J, names=curvenames)
+  out$fixed <- fix
+  out$fct <- fct
   class(out) <- "standrc"
   return(out)
 }
