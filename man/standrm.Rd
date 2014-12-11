@@ -3,7 +3,7 @@
 \title{Dose-response models with rstan}
 \description{Formula interface for fitting dose-response curves with rstan}
 \usage{
-standrm(formula, data, fct, curveid = NULL, random = NULL, ...)
+standrm(formula, data, fct, curveid = NULL, random = NULL, respLev = NULL, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -12,6 +12,7 @@ standrm(formula, data, fct, curveid = NULL, random = NULL, ...)
   \item{fct}{A drc model function, currelntly only LL.5() is supported.}
   \item{curveid}{A two-sided formula with parameter names (b + c + d) on the left and a factor name on the right hand side, defining several clusters, modelled as fixed effects}
   \item{random}{A two-sided formula with parameter names (b + c + d) on the left and a factor name on the right hand side, defining several clusters, modelled as random effects}
+  \item{respLev}{A vector of effective dose response levels (between 0 and 100). If random effects available, the effective doses are sampled given an unknown cluster.}
   \item{\dots}{Additional arguments passed to function stan in ackage rstan}
 }
 
