@@ -130,7 +130,7 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, ...){
   
   mody <- "sigmasq_y ~ inv_gamma(0.001, 0.001); y ~ normal(mu, sigma_y);"
   
-  modr <- paste(c("rslope ~ normal(0, sigma_slope);", "rlasy ~ normal(0, sigma_lasy);", "ruasy ~ normal(0, sigma_dasy);", "red ~ normal(0, sigma_ed);", "rassym ~ normal(0, sigma_assym);")[pnlr], collapse=" ") 
+  modr <- paste(c("rslope ~ normal(0, sigma_slope);", "rlasy ~ normal(0, sigma_lasy);", "ruasy ~ normal(0, sigma_uasy);", "red ~ normal(0, sigma_ed);", "rassym ~ normal(0, sigma_assym);")[pnlr], collapse=" ") 
   modrsig <- paste(c("sigmasq_slope ~ inv_gamma(0.001, 0.001);", "sigmasq_lasy ~ inv_gamma(0.001, 0.001);", "sigmasq_uasy ~ inv_gamma(0.001, 0.001);", "sigmasq_ed ~ inv_gamma(0.001, 0.001);", "sigmasq_assym ~ inv_gamma(0.001, 0.001);")[pnlr], collapse=" ") 
   
   # new random effects for derived ed
