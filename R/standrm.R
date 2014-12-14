@@ -1,4 +1,4 @@
-standrm <- function(formula, data, fct, curveid=NULL, random=NULL, respLev=NULL, ...){
+standrm <- function(formula, data, fct, curveid=NULL, random=NULL, ...){
   callDetail <- match.call()
   
   mf <- model.frame(formula, data)
@@ -53,23 +53,15 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, respLev=NULL,
   pe <- rep(median(x), jv[4])
   pf <- rep(0, jv[5])
   
-  ped <- respLev/100
-  Ned <- length(ped)
-  
-  stan_dat <- list(N=N, J=J, K=K, idc=idc, idr=idr, y=y, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf, Ned=Ned, ped=ped)
-  if (is.null(curveid)) stan_dat <- list(N=N, K=K, idr=idr, y=y, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf, Ned=Ned, ped=ped)
-  if (is.null(random)) stan_dat <- list(N=N, J=J, idc=idc, y=y, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf, Ned=Ned, ped=ped)
-  if (is.null(curveid) & is.null(random)) stan_dat <- list(N=N, y=y, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf, Ned=Ned, ped=ped)
-  if (is.null(respLev)) stan_dat <- list(N=N, J=J, K=K, idc=idc, idr=idr, y=y, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf)
-  if (is.null(curveid) & is.null(respLev)) stan_dat <- list(N=N, K=K, idr=idr, y=y, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf)
-  if (is.null(random) & is.null(respLev)) stan_dat <- list(N=N, J=J, idc=idc, y=y, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf)
-  if (is.null(curveid) & is.null(random) & is.null(respLev)) stan_dat <- list(N=N, y=y, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf)
+  stan_dat <- list(N=N, J=J, K=K, idc=idc, idr=idr, y=y, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf)
+  if (is.null(curveid)) stan_dat <- list(N=N, K=K, idr=idr, y=y, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf)
+  if (is.null(random)) stan_dat <- list(N=N, J=J, idc=idc, y=y, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf)
+  if (is.null(curveid) & is.null(random)) stan_dat <- list(N=N, y=y, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf)
   
   # data
   d1 <- "int<lower=0> N; real y[N];  real<lower=0> x[N];"  
   dJ <- "int<lower=0> idc[N]; int<lower=0> J;" 
   dK <- "int<lower=0> idr[N]; int<lower=0> K;" 
-  ded <- if (Ned <= 1) "real<lower=0, upper=100> ped;" else "int<lower=0> Ned; real<lower=0, upper=100> ped[Ned];"
   
   # priors
   dJp <- c("real pb[J];", "real pc[J];", "real pd[J];", "real pe[J];", "real pf[J];")[!isfix]
@@ -111,55 +103,29 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, respLev=NULL,
     trans <- paste(stra, strasq, "sigma_y <- sqrt(sigmasq_y); for(i in 1:N){ mu[i] <-", trc[2], " + (", trc[3], "-", trc[2], ") / (1 + exp(-exp(", trc[1], ") * (log(x[i]/", trc[4], "))))^exp(", trc[5], ");}", collapse="")
   }
   
-  # derived ED
-  rped <- if (Ned <= 1){
-    if (is.null(idc)) c("real dED;") else c("real dED[J];")
-  } else {
-    if (is.null(idc)) c("real dED[Ned];") else c("real dED[Ned, J];")
-  }
-  edtj <- c("slope[j]", "lasy[j]", "uasy[j]", "ed[j]", "assym[j]")[!isfix]
-  edt <- character(length(fix))
-  edt[!isfix] <- sapply(1:length(pnl), function(i) if (pnl[i]) edtj[i] else trap[i])
-  edt[isfix] <- fix[isfix]
-  if (is.null(random)){ 
-    if (is.null(idc)){
-      if (Ned <= 1){  
-        ted <- paste("dED <-", edt[4], " * (exp(-1*log( ped )/ exp(", edt[5], ")) - 1)^(1/(-1*exp(", edt[1], ")));", collapse="")
-      } else {
-        ted <- paste("for (ne in 1:Ned){ dED[ne] <-", edt[4], " * (exp(-1*log( ped[ne] )/ exp(", edt[5], ")) - 1)^(1/(-1*exp(", edt[1], ")));}", collapse="")
-      }
-    } else {
-      if (Ned <= 1){  
-        ted <- paste("for (j in 1:J){ dED[j] <-", edt[4], " * (exp(-1*log( ped )/ exp(", edt[5], ")) - 1)^(1/(-1*exp(", edt[1], ")));}", collapse="")
-      } else {
-        ted <- paste("for (j in 1:J){ for (ne in 1:Ned){ dED[ne, j] <-", edt[4], " * (exp(-1*log( ped[ne] )/ exp(", edt[5], ")) - 1)^(1/(-1*exp(", edt[1], ")));}}", collapse="")
-      }
-    }
-  } else {  
-    # random effects
-    rnpara <- c("real rnslope;", "real rnlasy;", "real rnuasy;", "real rned;", "real rnassym;")
-    rnparac <- paste(rnpara[pnlr], collapse=" ")
-    trnar <- c(paste(edt[1], " + rnslope"), 
-              paste("(", edt[2], " + rnlasy )"), 
-              paste("(", edt[3], " + rnuasy )"), 
-              paste("(", edt[4], " + rned )"), 
-              paste(edt[5], " + rnassym"))
-    trnc <- sapply(1:length(tra), function(i) if (pnlr[i]) trnar[i] else edt[i]) 
-    if (is.null(idc)){
-      if (Ned <= 1){  
-        ted <- paste("dED <-", trnc[4], " * (exp(-1*log( ped )/ exp(", trnc[5], ")) - 1)^(1/(-1*exp(", trnc[1], ")));", collapse="")
-      } else {
-        ted <- paste("for (ne in 1:Ned){ dED[ne] <-", trnc[4], " * (exp(-1*log( ped[ne] )/ exp(", trnc[5], ")) - 1)^(1/(-1*exp(", trnc[1], ")));}", collapse="")
-      }
-    } else {   
-      if (Ned <= 1){  
-        ted <- paste("for (j in 1:J){ dED[j] <-", trnc[4], " * (exp(-1*log( ped )/ exp(", trnc[5], ")) - 1)^(1/(-1*exp(", trnc[1], ")));}", collapse="")
-      } else {
-        ted <- paste("for (j in 1:J){ for (ne in 1:Ned){ dED[ne, j] <-", trnc[4], " * (exp(-1*log( ped[ne] )/ exp(", trnc[5], ")) - 1)^(1/(-1*exp(", trnc[1], ")));}}", collapse="")
-      }
-    }
-  }
+  ### population parameters
+  popJ <- c("real pslope[J];", "real plasy[J];", "real puasy[J];", "real ped[J];", "real passym[J];")
+  pop <- c("real pslope;", "real plasy;", "real puasy;", "real ped;", "real passym;")
+  pop[!isfix] <- sapply(1:length(pnl), function(i) if (pnl[i]) popJ[!isfix][i] else pop[!isfix][i]) 
+  popc <- paste(pop, collapse=" ")
+  rnpara <- c("real rnslope;", "real rnlasy;", "real rnuasy;", "real rned;", "real rnassym;")
+  rnparac <- paste(rnpara[pnlr], collapse=" ")
+  ppp <- c("slope", "lasy", "uasy", "ed", "assym")[!isfix]
+  ppj <- c("slope[j]", "lasy[j]", "uasy[j]", "ed[j]", "assym[j]")[!isfix]
+  pp <- character(length(fix))
+  pp[!isfix] <- sapply(1:length(pnl), function(i) if (pnl[i]) ppj[i] else ppp[i])
+  pp[isfix] <- fix[isfix]
+  po <- c("pslope", "plasy", "puasy", "ped", "passym")
+  poj <- paste("for (j in 1:J)", c("pslope[j]", "plasy[j]", "puasy[j]", "ped[j]", "passym[j]"))
+  pof <- character(length(fix))
+  pof[!isfix] <- sapply(1:length(pnl), function(i) if (pnl[i]) poj[!isfix][i] else po[!isfix][i])
+  pof[isfix] <- po[isfix]
+  ppc <- paste(pof[1], " <- ", pp[1], if (pnlr[1]) " + rnslope", ";", pof[2], "<-", pp[2], if (pnlr[2]) " + rnlasy", ";", pof[3], " <- ", pp[3], if (pnlr[3]) " + rnuasy", ";", pof[4], " <- ", pp[4], if (pnlr[4]) " + rned", ";", pof[5], " <- ", pp[5], if (pnlr[5]) " + rnassym", ";")
   
+  modp <- paste(c("rnslope ~ normal(0, sigma_slope);", "rnlasy ~ normal(0, sigma_lasy);", "rnuasy ~ normal(0, sigma_dasy);", "rned ~ normal(0, sigma_ed);", "rnassym ~ normal(0, sigma_assym);")[pnlr], collapse=" ") 
+  
+  
+  #### model statements
   mod <- paste(c("slope ~ normal(pb, 100);", "lasy ~ normal(pc, 100);", "uasy ~ normal(pd, 100);", "ed ~ normal(pe, 100);", "assym ~ normal(pf, 100);")[!isfix], collapse=" ") 
   
   mody <- "sigmasq_y ~ inv_gamma(0.001, 0.001); y ~ normal(mu, sigma_y);"
@@ -174,13 +140,12 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, respLev=NULL,
                     d1,   
                     if (!is.null(idc)) dJ,
                     if (!is.null(random)) dK,
-                    if (!is.null(respLev)) ded,
                     dpc,
                     "} ",
                     "parameters { real<lower=0> sigmasq_y;",
                     parac,
                     if (!is.null(random)) rparac, 
-                    if (!is.null(random) & !is.null(respLev)) rnparac,  
+                    if (!is.null(random)) rnparac,  
                     "} ",
                     "transformed parameters {",
                     trans1,                    
@@ -191,27 +156,28 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, respLev=NULL,
                     mody,                     
                     if (!is.null(random)) modr,
                     if (!is.null(random)) modrsig,    
-                    if (!is.null(random) & !is.null(respLev)) moded,                    
+                    if (!is.null(random)) modp,                    
                     "}",
-                    if (!is.null(respLev)) "generated quantities {",
-                    if (!is.null(respLev)) rped,
-                    if (!is.null(respLev)) ted,                                      
-                    if (!is.null(respLev)) "}",
+                    "generated quantities {",
+                    popc,
+                    ppc,                                     
+                    "}",
                     sep="")
   
   assign("stancode", stancode, envir=.GlobalEnv)
   fit <- stan(model_code = 'stancode', data = stan_dat, ...)
   
   out <- list()
+  out$call <- callDetail
   out$data <- stan_dat
   out$model <- stancode
   out$stan <- fit
-  out$pars <- c(trap, "sigma_y")
+  out$fixedpars <- trap
+  out$pars <- c("pslope", "plasy", "puasy", "ped", "passym")
   if (!is.null(random)) out$random <- c("slope", "lasy", "uasy", "ed", "assym")[pnlr] 
   out$curves <- list(pars=pnl, J=J, names=curvenames)
   out$fixed <- fix
   out$fct <- fct
-  out$respLev <- respLev
   class(out) <- "standrc"
   return(out)
 }
