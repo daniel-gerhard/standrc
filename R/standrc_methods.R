@@ -14,6 +14,14 @@ VarCorr.standrc <- function(x, sigma=1, rdig=3){
   print(x$stan, pars=c(paste("sigma_", x$random, sep=""), "sigma_y"))
 }
 
+fitted.standrc <- function(object, ...){
+  extract(object$stan, pars="mu")$mu
+}
+
+residuals.standrc <- function(object, ...){
+  extract(object$stan, pars="residuals")$residuals
+}
+
 predict.standrc <- function(object, ..., newdata=NULL){ 
   if (is.null(newdata)) x <- object$data$x else x <- newdata[,as.character(object$call$formula[3])]
   if (is.null(newdata)){

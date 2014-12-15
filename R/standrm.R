@@ -159,7 +159,9 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, ...){
                     if (!is.null(random)) modp,                    
                     "}",
                     "generated quantities {",
+                    "real residuals[N];",                    
                     popc,
+                    "for (i in 1:N) residuals[i] <- y[i] - mu[i];",
                     ppc,                                     
                     "}",
                     sep="")
