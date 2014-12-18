@@ -1,0 +1,136 @@
+---
+title: "Using standrc"
+author: "Daniel Gerhard"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+
+The package standrc provides wrapper functions to fit dose-response models using STAN by a convenient formula interface. Of course, this results in a reduction of flexibility in setting up the model; hence, encouraging everyone to directly use rstan to fit a specific model of interest.
+
+## standrm
+
+The function standrm() can be used similar as function drm() in package [drc](http://cran.r-project.org/web/packages/drc/index.html) or function medrm() in package [medrc](https://github.com/daniel-gerhard/medrc).
+
+The input is structured as
+
+* **formula**: A formula specifying the dose response relationship with the name of the response on the left and a covariate with dose levels on the right hand side (`response ~ dose`)
+* **data**: a data.frame object with containing all variables defined in the model
+* **fct**: a model function of package *drc*. Only the LL.5() is implemented up to now; for more information see the dose-response model section.
+
+### Ryegrass Example
+
+The ryegrass dataset of package drc provides a simple example, fitting a four parameter log-logistic model. The asymmetry parametr is fixed at 0, resulting in a symmetric curve, as it is defined on the log-scale, in contrast to the drc parameterization, where it is modelled without any tranformation.
+```{r ryegrassLL4, eval=FALSE}
+rgm <- standrm(rootl ~ conc, data=ryegrass,
+               fct=LL.5(fixed=c(NA, NA, NA, NA, 0)))
+```
+
+```{r ryegrassLL4eval, results='hide', message=FALSE, echo=FALSE}
+library(standrc)
+rgm <- standrm(rootl ~ conc, data=ryegrass,
+               fct=LL.5(fixed=c(NA, NA, NA, NA, 0)),
+               iter=5000)
+```
+
+The resulting object is a list containing the data, stan code, and the rstan results with the samples from the posterior distribution, which can be summarized using the print() method.
+
+```{r printrgm}
+print(rgm)
+```
+
+The predicted curve can be displayed using for example package ggplot2:
+
+```{r ryegrassplot}
+newd <- expand.grid(conc=exp(seq(log(0.5), log(30), length=100)))
+pm <- predict(rgm, newdata=newd)
+newd$p <- apply(pm, 2, function(x) mean(x, na.rm=TRUE))
+newd$pmin <- apply(pm, 2, function(x) quantile(x, 0.025, na.rm=TRUE))
+newd$pmax <- apply(pm, 2, function(x) quantile(x, 0.975, na.rm=TRUE))
+
+library(ggplot2)
+ggplot(ryegrass, aes(x=log(conc), y=rootl)) + 
+  geom_point() +
+  geom_ribbon(data=newd, aes(y=p, ymin=pmin, ymax=pmax, colour=NULL), 
+              alpha=0.2) + 
+  geom_line(data=newd, aes(y=p)) + 
+  theme_classic()
+```
+
+
+## standrc Methods
+
+The **print** method returns a summary of the posterior samples of the fixed effects parameters. When random effects are assumed, the fixed effect samples are obtained conditional on a new, unknown random effect cluster.
+The **fixef** method returns a summary of the fixed effects parameters conditional on a random effect of 0. If no random effects are present, the print and fixef methods return similar results.
+The **ranef** method returns a summary of posterior samples of the random effects and the **VarCorr** method provides an overview of the samples of the corresponding variance components.
+
+A **fitted** and a **residual** method is available to extract a matrix with samples from the posterior of the residuals and fitted values (different parameters in columns, samples in rows). 
+Predictions (posterior samples) for a new dataset can be obtained using the **predict** method; when random effects are defined in the model, the predictons are generated for an unknown random effect cluster. 
+
+
+
+## Model Extensions
+
+The model can be extended by
+
+* **curveid**: estimating nonlinear model parameters based on several clusters, fitting a curve for each group of observations. Using a formula interface, on the left-hand side the parameters can be specified, which are assumed to be different between curves, otherwise a single parameter is chosen. On the right-hand side the name of a factor containing the cluster levels needs to be provided. E.g. `b + d + e ~ cluster`, where the letters b to f are the model parameters as defined in the LL.5() function.
+* **random**: similar to the curveid argument, but modelling random effects additive on each of the specified parameters, summarizing the cluster effects by variance components (see the model definition for more information).
+
+
+The `...` argument can be used to supply further arguments to the function stan(), like the number of iterations `iter`, burn-in samples `warmup`, or thinning `thin`.
+
+
+### Spinach Example
+
+Streibig et al. (1999) investigated the inhibition of photosynthesis in response to two synthetic photosystem II inhibitors, the herbicides diuron and bentazon. In an experiment, the effect of oxygen consumption of thylakoid membranes (chloroplasts) from spinach was measured after incubation with the synthetic inhibitors. Five assays, three treated with bentazon and two with diuron, were used. For each assay six increasing herbicide concentrations were applied together with a negative control, using different dose ranges on a logarithmic scale for the two treatments to encompass the whole dose-response range based on preliminary experiments.
+
+A three-parameter log-logistic model is assumed, fixing the asymmetry parameter to obtain a symmetric curve and forcing the lower asymptote to 0 (the asymmetry parameter is modelled on a logarithmic scale). In contrast to the drc package, the slope parameter is also defined on a log-scale, allowing only positive values on the original scale; hence, the interpretation of the two asymptote parameters change from lower to upper and upper to lower, respectively, with a change from increasing to decreasing dose-response shapes.  
+
+Two separate curves are modelled for the two different herbicide treatments by assuming different upper asymptotes and ED50 parameters, defined by the `curveid` argument. The assay effects are modelled as random effects on the slope, ED50, and on both of the asymptotes; note that the random effects are also available for the lower asymptotes, which is fixed at 0.
+
+Especially the random effects require a high number of parameters, which can be highly correlated; therefore, a higher number of iterations is needed for convergence.
+
+```{r spinach, eval=FALSE}
+spm <- standrm(formula=SLOPE ~ DOSE, data=spinach, 
+               fct=LL.5(fixed=c(NA, NA, 0, NA, 0)),
+               curveid=c + e ~ HERBICIDE,
+               random=b + c + d + e ~ CURVE,
+               iter=10000)
+```
+
+
+## Model Definition
+
+The five-parameter log-logistic model is defined as
+$$  f(dose, b, c, d, e, f) = c + \frac{d - c}{1 + exp(-exp(b)(log(dose /e)))^{exp(f)}} $$
+
+Multiple fixed effects ($j=1,...,J$) and random effects $\tilde{b}_{k}, \tilde{c}_{k}, \tilde{d}_{k}, \tilde{e}_{k}, \tilde{f}_{k}$ with $k=1,...,K$ are introduced as
+$$ b = b_{j} + \tilde{b}_{k}, \quad c = c_{j} + \tilde{c}_{k}, \quad d = d_{j} + \tilde{d}_{k}, \quad e = e_{j} + \tilde{e}_{k}, \quad f = f_{j} + \tilde{f}_{k}  $$
+
+For each fixed effects parameter a weakly informative Normal prior is assumed:
+$$ b_{j} \sim N(0, 100), \quad c_{j} \sim N(\mu_{c}, 100), \quad d_{j} \sim N(\mu_{d}, 100), \quad e_{j} \sim N(\mu_{e}, 100), \quad f_{j} \sim N(0, 100) $$
+where the some of the prior means are obtained from the sample of observation: $\mu_{c}$ and $\mu_{d}$ are defined as $\min(y_{i})$ and $\max(y_{i})$ at the lowest/highest dose level, $\mu_{e}=median(dose_{i})$.
+
+The random effects are modelled by their marginal distributions as 
+$$ \tilde{b}_{k} \sim N(0, \sigma_{b}), \quad \sigma_{b} \sim IG(0.001, 0.001) $$
+$$ ... $$
+
+The residuals in the model
+$$ y_{i} = f(dose_{i}, b, c, d, e, f) + \epsilon_{i} $$
+are distributed as
+$$ \epsilon_{i} \sim N(0, \sigma_{\epsilon}), \quad \sigma_{\epsilon} \sim IG(0.001, 0.001) $$
+
+
+## standrc objects
+
+The standrm function returns a list with following slots:
+
+* **data**: a list with data used to fit the stan model
+* **model**: a character string containing the model definition as stan code
+* **stan**: the fitted results as an object of S4 class `stanfit` 
+
+Hence, by using the data and model slots, the model can be refitted using the function stan. With the stanfit object in the stan slot, the samples from the posterior distribution of all parameters in the model are available. To extract the samples, the extract() function of rstan can be used. There is also a lot of functionality for model diagnostics available in the rstan package, which can be directly applied on the stanfit object.
