@@ -9,6 +9,6 @@ The package requires the installation of rstan https://github.com/stan-dev/rstan
 With a recent version of rstan being available, the devtools package can be used to install standrc:
 ```
 library(devtools)
-install_github("daniel-gerhard/standrc")
+install_github("daniel-gerhard/standrc", build_vignettes=TRUE)
 ```
 
