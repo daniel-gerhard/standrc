@@ -16,8 +16,16 @@ ED.standrc <- function(object, respLev=NULL){
         xt[1] <- -exp(xt[1])
         xt[5] <- exp(xt[5])
         p <- 100-p
-        tempVal <- log((100 - p)/100)
-        xt[4] * (exp(-tempVal/xt[5]) - 1)^(1/xt[1])
+        if (object$fct$name %in% c("LL.5", "LL.4", "LL.3")){
+          tempVal <- log((100 - p)/100)
+          value <- xt[4] * (exp(-tempVal/xt[5]) - 1)^(1/xt[1])
+          return(value)
+        }
+        if (object$fct$name %in% c("L.5", "L.4", "L.3")){
+          tempVal <- 100/p
+          value <- xt[4] + (log(tempVal^(1/xt[5]) - 1))/xt[1]
+          return(value)
+        }
       })
     }))
     colnames(smat) <- object$curves$names
@@ -25,8 +33,7 @@ ED.standrc <- function(object, respLev=NULL){
   })
   names(EDlist) <- respLev
   class(EDlist) <- "EDsamp"
-  return(EDlist)
-  
+  return(EDlist)  
 }
 
 print.EDsamp <- function(x, ...){
