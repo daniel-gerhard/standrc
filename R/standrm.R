@@ -41,7 +41,7 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, ...){
   y <- mf[,1]
   x <- mf[,2] 
   if (fct$name %in% c("LL.5", "LL.4", "LL.3")) x[x == 0] <- 0.5*min(x[x > 0])
-  if (fct$name %in% c("LL.4", "LL.3")) fix[5] <- 0
+  if (fct$name %in% c("LL.4", "LL.3", "L.4", "L.3")) fix[5] <- 0
   
   pb <- rep(0, jv[1])  
   if (mean(y[x == min(x)]) < mean(y[x == max(x)])){
@@ -87,7 +87,8 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, ...){
   tra[!isfix] <- sapply(1:length(pnl), function(i) if (pnl[i]) traj[i] else trap[i])
   tra[isfix] <- fix[isfix]
   if (is.null(random)){
-    trans <- paste("sigma_y <- sqrt(sigmasq_y); for(i in 1:N){ mu[i] <-", tra[2], " + (", tra[3], "-", tra[2], ") / (1 + exp(-exp(", tra[1], ") * (log(x[i]/", tra[4], "))))^exp(", tra[5], ");}", collapse="")
+    if (fct$name %in% c("LL.5", "LL.4", "LL.3")) trans <- paste("sigma_y <- sqrt(sigmasq_y); for(i in 1:N){ mu[i] <-", tra[2], " + (", tra[3], "-", tra[2], ") / (1 + exp(-exp(", tra[1], ") * (log(x[i]/", tra[4], "))))^exp(", tra[5], ");}", collapse="")
+    if (fct$name %in% c("L.5", "L.4", "L.3")) trans <- paste("sigma_y <- sqrt(sigmasq_y); for(i in 1:N){ mu[i] <-", tra[2], " + (", tra[3], "-", tra[2], ") / (1 + exp(-exp(", tra[1], ") * (x[i] - ", tra[4], ")))^exp(", tra[5], ");}", collapse="")
   } else {
     stra <- paste(c("real<lower=0> sigma_slope;", "real<lower=0> sigma_lasy;", "real<lower=0> sigma_uasy;", "real<lower=0> sigma_ed;", "real<lower=0> sigma_assym;")[pnlr], collapse=" ")
     strasq <- paste(c("sigma_slope <- sqrt(sigmasq_slope);",
@@ -101,7 +102,8 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, ...){
               paste("(", tra[4], " + red[idr[i]] )"), 
               paste("(", tra[5], " + rassym[idr[i]] )"))
     trc <- sapply(1:length(tra), function(i) if (pnlr[i]) trar[i] else tra[i])    
-    trans <- paste(stra, strasq, "sigma_y <- sqrt(sigmasq_y); for(i in 1:N){ mu[i] <-", trc[2], " + (", trc[3], "-", trc[2], ") / (1 + exp(-exp(", trc[1], ") * (log(x[i]/", trc[4], "))))^exp(", trc[5], ");}", collapse="")
+    if (fct$name %in% c("LL.5", "LL.4", "LL.3")) trans <- paste(stra, strasq, "sigma_y <- sqrt(sigmasq_y); for(i in 1:N){ mu[i] <-", trc[2], " + (", trc[3], "-", trc[2], ") / (1 + exp(-exp(", trc[1], ") * (log(x[i]/", trc[4], "))))^exp(", trc[5], ");}", collapse="")
+    if (fct$name %in% c("L.5", "L.4", "L.3")) trans <- paste(stra, strasq, "sigma_y <- sqrt(sigmasq_y); for(i in 1:N){ mu[i] <-", trc[2], " + (", trc[3], "-", trc[2], ") / (1 + exp(-exp(", trc[1], ") * (x[i] -", trc[4], ")))^exp(", trc[5], ");}", collapse="")
   }
   
   ### population parameters
