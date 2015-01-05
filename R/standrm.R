@@ -40,7 +40,7 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, ...){
   N <- nrow(mf) 
   y <- mf[,1]
   x <- mf[,2] 
-  if (fct$name == "LL.5") x[x == 0] <- 0.5*min(x[x > 0])
+  if (fct$name %in% c("LL.5", "LL.4", "LL.3")) x[x == 0] <- 0.5*min(x[x > 0])
   
   pb <- rep(0, jv[1])  
   if (mean(y[x == min(x)]) < mean(y[x == max(x)])){
