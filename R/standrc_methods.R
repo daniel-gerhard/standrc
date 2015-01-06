@@ -40,8 +40,8 @@ predict.standrc <- function(object, ..., newdata=NULL){
   })
   pred <- sapply(1:length(x), function(i){
     apply(samp[[as.numeric(idc)[i]]], 1, function(xp){
-      if (object$fct$name %in% c("LL.5", "LL.4", "LL.3")) xp[2] + (xp[3] - xp[2]) / (1 + exp(-exp(xp[1]) * (log(x[i]/ xp[4]))))^exp(xp[5])
-      if (object$fct$name %in% c("L.5", "L.4", "L.3")) xp[2] + (xp[3] - xp[2]) / (1 + exp(-exp(xp[1]) * (x[i] - xp[4])))^exp(xp[5])
+      if (object$fct$name %in% c("LL.5", "LL.4", "LL.3")) return(xp[2] + (xp[3] - xp[2]) / (1 + exp(-exp(xp[1]) * (log(x[i]/ xp[4]))))^exp(xp[5]))
+      if (object$fct$name %in% c("L.5", "L.4", "L.3")) return(xp[2] + (xp[3] - xp[2]) / (1 + exp(-exp(xp[1]) * (x[i] - xp[4])))^exp(xp[5]))
     })
   })
   return(pred)
