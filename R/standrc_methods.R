@@ -44,6 +44,7 @@ predict.standrc <- function(object, ..., newdata=NULL){
       if (object$fct$name %in% c("L.5", "L.4", "L.3")) return(xp[2] + (xp[3] - xp[2]) / (1 + exp(-exp(xp[1]) * (x[i] - xp[4])))^exp(xp[5]))
       if (object$fct$name %in% c("W1.4", "W1.3")) return(xp[2] + (xp[3] - xp[2]) * exp(-exp(-exp(xp[1]) * (log(x[i]) - log(xp[4])))))
       if (object$fct$name %in% c("W2.4", "W2.3")) return(xp[2] + (xp[3] - xp[2]) * (1 - exp(-exp(-exp(xp[1]) * (log(x[i]) - log(xp[4]))))))
+      if (object$fct$name %in% c("LN.4", "LN.3")) return(xp[2] + (xp[3] - xp[2]) * pnorm(-exp(xp[1]) * (log(x[i]) - log(xp[4]))))
     })
   })
   return(pred)

@@ -24,9 +24,18 @@ ED.standrc <- function(object, respLev=NULL){
           tempVal <- 100/p
           value <- xt[4] + (log(tempVal^(1/xt[5]) - 1))/xt[1]
         }
-        if (object$fct$name %in% c("W1.4", "W1.3", "W2.4", "W2.3")){
+        if (object$fct$name %in% c("W1.4", "W1.3")){
           tempVal <- log(-log((100 - p)/100))
           value <- exp(tempVal/xt[1] + log(xt[4]))
+        }
+        if (object$fct$name %in% c("W2.4", "W2.3")){
+          p <- 100 - p
+          tempVal <- log(-log((100 - p)/100))
+          value <- exp(tempVal/xt[1] + log(xt[4]))
+        }
+        if (object$fct$name %in% c("LN.4", "LN.3")){
+          tempVal <- 1 - (100-p)/100
+          value <- exp(qnorm(tempVal)/xt[1]) * xt[4]
         }
         return(value)
       })
