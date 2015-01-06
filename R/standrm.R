@@ -41,7 +41,7 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, ...){
   N <- nrow(mf) 
   y <- mf[,1]
   x <- mf[,2]   
-  if (fct$name %in% c("LL.5", "LL.4", "LL.3")) x[x == 0] <- 0.5*min(x[x > 0])
+  if (fct$name %in% c("LL.5", "LL.4", "LL.3", "W1.4", "W1.3")) x[x == 0] <- 0.5*min(x[x > 0])
   if (fct$name %in% c("LL.4", "LL.3", "L.4", "L.3")) fix[5] <- 0
   
   pb <- rep(0, jv[1])  
