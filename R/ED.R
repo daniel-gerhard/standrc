@@ -19,13 +19,16 @@ ED.standrc <- function(object, respLev=NULL){
         if (object$fct$name %in% c("LL.5", "LL.4", "LL.3")){
           tempVal <- log((100 - p)/100)
           value <- xt[4] * (exp(-tempVal/xt[5]) - 1)^(1/xt[1])
-          return(value)
         }
         if (object$fct$name %in% c("L.5", "L.4", "L.3")){
           tempVal <- 100/p
           value <- xt[4] + (log(tempVal^(1/xt[5]) - 1))/xt[1]
-          return(value)
         }
+        if (object$fct$name %in% c("W1.4", "W1.3")){
+          tempVal <- log(-log((100 - p)/100))
+          value <- exp(tempVal/xt[1] + log(xt[4]))
+        }
+        return(value)
       })
     }))
     colnames(smat) <- object$curves$names
