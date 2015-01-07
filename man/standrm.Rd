@@ -9,7 +9,7 @@ standrm(formula, data, fct, curveid = NULL, random = NULL, ...)
 \arguments{
   \item{formula}{A two-sided formula with response and dose covariate names}
   \item{data}{A dataframe containing the variables in the model}
-  \item{fct}{A drc model function, currelntly only LL.5() is supported.}
+  \item{fct}{A drc model function.}
   \item{curveid}{A two-sided formula with parameter names (b + c + d) on the left and a factor name on the right hand side, defining several clusters, modelled as fixed effects}
   \item{random}{A two-sided formula with parameter names (b + c + d) on the left and a factor name on the right hand side, defining several clusters, modelled as random effects}
   \item{\dots}{Additional arguments passed to function stan in ackage rstan}
@@ -26,6 +26,8 @@ standrm(formula, data, fct, curveid = NULL, random = NULL, ...)
 \author{
 Daniel Gerhard
 }
+
+\details{The parameterization of the drc model functions is changed, modelling the slope and the asymmetry parameter on a logarithmic scale and allowing the lower and upper asymptotes to swap parameters. This might be problematic with three-parameter functions, fixing a specific asymptote by the fixed argument in a more complex model might be a better solution. Random effect parameters can be specified even when the fixed effects counterpart is fixed at a specific value, e.g. allowing cluster variation around a lower asymptote fixed at a response value of 0.}
 
 \examples{
 \dontrun{

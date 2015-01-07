@@ -20,7 +20,7 @@ The input is structured as
 
 * **formula**: A formula specifying the dose response relationship with the name of the response on the left and a covariate with dose levels on the right hand side (`response ~ dose`)
 * **data**: a data.frame object with containing all variables defined in the model
-* **fct**: a model function of package *drc*. Only the LL.5() is implemented up to now; for more information see the dose-response model section.
+* **fct**: a model function of package *drc*. The parameterization of the drc model functions is changed, modelling the slope and the asymmetry parameter on a logarithmic scale and allowing the lower and upper asymptotes to swap parameters.
 
 ### Ryegrass Example
 
