@@ -72,6 +72,14 @@ A **fitted** and a **residual** method is available to extract a matrix with sam
 Predictions (posterior samples) for a new dataset can be obtained using the **predict** method; when random effects are defined in the model, the predictons are generated for an unknown random effect cluster. 
 
 
+## Deriving Effective Dose Parameters
+
+Similar to package drc a function `ED()` is available to calculate the (relative) effective dose at specified response levels (between 0 and 100) given a standrc object. The output contains the median of the samples of the ED posterior distribution as well as 95\% credible intervals separately for each given response level and curveid. When random effects are included in the model (see the following Section) the ED is computed conditional on an unobserved random effect level.
+
+```{r ED}
+ED(rgm, respLev=c(5, 50, 95))
+```
+
 
 ## Model Extensions
 
@@ -105,8 +113,20 @@ spm <- standrm(formula=SLOPE ~ DOSE, data=spinach,
 
 ## Model Definition
 
-The five-parameter log-logistic model is defined as
-$$  f(dose, b, c, d, e, f) = c + \frac{d - c}{1 + exp(-exp(b)(log(dose /e)))^{exp(f)}} $$
+### Dose-response functions
+
+* The five-parameter logistic model `L.5()` is defined as
+$$ f(dose, b, c, d, e, f) = c + \frac{d - c}{(1 + exp(-exp(b) * (dose - e)))^{exp(f)}} $$
+* or as log-logistic model `LL.5()` with the dose on a logarithmic scale
+$$  f(dose, b, c, d, e, f) = c + \frac{d - c}{1 + exp(-exp(b)(log(dose / e)))^{exp(f)}} $$
+* Two Weibull functions `W1.4()` and `W2.4()` are available
+$$ f(dose, b, c, d, e) = c + (d - c) exp(-exp(-exp(b) (log(dose) - log(e)))) $$
+$$ f(dose, b, c, d, e) = c + (d - c) (1 - exp(-exp(-exp(b) (log(dose) - log(e))))) $$
+* The log-Normal function is defined as
+$$ f(dose, b, c, d, e) = c + (d - c) \Phi (-exp(b) (log(dose) - log(e))) $$
+with $\Phi()$ denoting the standard normal cdf.
+
+### Fixed and random effects
 
 Multiple fixed effects ($j=1,...,J$) and random effects $\tilde{b}_{k}, \tilde{c}_{k}, \tilde{d}_{k}, \tilde{e}_{k}, \tilde{f}_{k}$ with $k=1,...,K$ are introduced as
 $$ b = b_{j} + \tilde{b}_{k}, \quad c = c_{j} + \tilde{c}_{k}, \quad d = d_{j} + \tilde{d}_{k}, \quad e = e_{j} + \tilde{e}_{k}, \quad f = f_{j} + \tilde{f}_{k}  $$
