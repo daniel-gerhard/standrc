@@ -3,7 +3,8 @@
 \title{Dose-response models with rstan}
 \description{Formula interface for fitting dose-response curves with rstan}
 \usage{
-standrm(formula, data, fct, curveid = NULL, random = NULL, ...)
+standrm(formula, data, fct, curveid = NULL, random = NULL,
+        priors = standrc_priors(), ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -12,6 +13,7 @@ standrm(formula, data, fct, curveid = NULL, random = NULL, ...)
   \item{fct}{A drc model function.}
   \item{curveid}{A two-sided formula with parameter names (b + c + d) on the left and a factor name on the right hand side, defining several clusters, modelled as fixed effects}
   \item{random}{A two-sided formula with parameter names (b + c + d) on the left and a factor name on the right hand side, defining several clusters, modelled as random effects}
+  \item{priors}{A list with prior definitions, see \code{\link{standrc_priors}}}
   \item{\dots}{Additional arguments passed to function stan in ackage rstan}
 }
 

@@ -1,4 +1,4 @@
-standrm <- function(formula, data, fct, curveid=NULL, random=NULL, ...){
+standrm <- function(formula, data, fct, curveid=NULL, random=NULL, priors=standrc_priors(), ...){
   callDetail <- match.call()
   
   mf <- model.frame(formula, data)
@@ -44,16 +44,16 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, ...){
   if (fct$name %in% c("LL.5", "LL.4", "LL.3", "W1.4", "W1.3", "W2.4", "W2.3", "LN.4", "LN.3")) x[x == 0] <- 0.5*min(x[x > 0])
   if (fct$name %in% c("LL.4", "LL.3", "L.4", "L.3")) fix[5] <- 0
   
-  pb <- rep(0, jv[1])  
+  if (is.null(priors$pb)) pb <- rep(0, jv[1])  
   if (mean(y[x == min(x)]) < mean(y[x == max(x)])){
-    pc <- rep(min(y), jv[2])
-    pd <- rep(max(y), jv[3])
+    if (is.null(priors$pc)) pc <- rep(min(y), jv[2])
+    if (is.null(priors$pd)) pd <- rep(max(y), jv[3])
   } else {
-    pd <- rep(min(y), jv[3])
-    pc <- rep(max(y), jv[2])
+    if (is.null(priors$pd)) pd <- rep(min(y), jv[3])
+    if (is.null(priors$pc)) pc <- rep(max(y), jv[2])
   }  
-  pe <- rep(median(x), jv[4])
-  pf <- rep(0, jv[5])
+  if (is.null(priors$pe)) pe <- rep(median(x), jv[4])
+  if (is.null(priors$pf)) pf <- rep(0, jv[5])
   
   stan_dat <- list(N=N, J=J, K=K, idc=idc, idr=idr, y=y, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf)
   if (is.null(curveid)) stan_dat <- list(N=N, K=K, idr=idr, y=y, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf)
@@ -136,12 +136,20 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, ...){
   
   
   #### model statements
-  mod <- paste(c("slope ~ normal(pb, 100);", "lasy ~ normal(pc, 100);", "uasy ~ normal(pd, 100);", "ed ~ normal(pe, 100);", "assym ~ normal(pf, 100);")[!isfix], collapse=" ") 
+  mod <- paste(c(paste("slope ~", priors$b, ";"), 
+                 paste("lasy ~", priors$c, ";"), 
+                 paste("uasy ~", priors$d, ";"), 
+                 paste("ed ~", priors$e, ";"), 
+                 paste("assym ~", priors$f, ";"))[!isfix], collapse=" ") 
   
-  mody <- "sigmasq_y ~ inv_gamma(0.001, 0.001); y ~ normal(mu, sigma_y);"
+  mody <- paste("sigmasq_y ~", priors$sy, "; y ~ normal(mu, sigma_y);")
   
   modr <- paste(c("rslope ~ normal(0, sigma_slope);", "rlasy ~ normal(0, sigma_lasy);", "ruasy ~ normal(0, sigma_uasy);", "red ~ normal(0, sigma_ed);", "rassym ~ normal(0, sigma_assym);")[pnlr], collapse=" ") 
-  modrsig <- paste(c("sigmasq_slope ~ inv_gamma(0.001, 0.001);", "sigmasq_lasy ~ inv_gamma(0.001, 0.001);", "sigmasq_uasy ~ inv_gamma(0.001, 0.001);", "sigmasq_ed ~ inv_gamma(0.001, 0.001);", "sigmasq_assym ~ inv_gamma(0.001, 0.001);")[pnlr], collapse=" ") 
+  modrsig <- paste(c(paste("sigmasq_slope ~", priors$sb, ";"), 
+                     paste("sigmasq_lasy ~", priors$sc, ";"), 
+                     paste("sigmasq_uasy ~", priors$sd, ";"), 
+                     paste("sigmasq_ed ~", priors$se, ";"), 
+                     paste("sigmasq_assym ~",priors$sf, ";"))[pnlr], collapse=" ") 
   
   # new random effects for derived ed
   moded <- paste(c("rnslope ~ normal(0, sigma_slope);", "rnlasy ~ normal(0, sigma_lasy);", "rnuasy ~ normal(0, sigma_uasy);", "rned ~ normal(0, sigma_ed);", "rnassym ~ normal(0, sigma_assym);")[pnlr], collapse=" ") 

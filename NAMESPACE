@@ -1,4 +1,4 @@
-export(standrm)
+export(standrm, standrc_priors)
 import(rstan, drc, nlme)
 
 S3method(print, standrc)
