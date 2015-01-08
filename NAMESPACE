@@ -1,5 +1,5 @@
 export(standrm, standrc_priors)
-import(rstan, drc, nlme)
+import(rstan, drc, nlme, ggplot2)
 
 S3method(print, standrc)
 S3method(fixef, standrc)
@@ -8,5 +8,6 @@ S3method(VarCorr, standrc)
 S3method(residuals, standrc)
 S3method(fitted, standrc)
 S3method(predict, standrc)
+S3method(plot, standrc)
 S3method(ED, standrc)
 S3method(print, EDsamp)

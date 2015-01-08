@@ -43,23 +43,22 @@ The resulting object is a list containing the data, stan code, and the rstan res
 print(rgm)
 ```
 
-The predicted curve can be displayed using for example package ggplot2:
+Predictions for the dose-response curve can be obtained by the predict method, returning a matrix with the samples from the posterior distribution. These samples can be summarized e.g. by arithmetic means, standard deviations or quantiles.
 
-```{r ryegrassplot}
+```{r ryegrasspred, eval=FALSE}
 newd <- expand.grid(conc=exp(seq(log(0.5), log(30), length=100)))
 pm <- predict(rgm, newdata=newd)
 newd$p <- apply(pm, 2, function(x) mean(x, na.rm=TRUE))
 newd$pmin <- apply(pm, 2, function(x) quantile(x, 0.025, na.rm=TRUE))
 newd$pmax <- apply(pm, 2, function(x) quantile(x, 0.975, na.rm=TRUE))
-
-library(ggplot2)
-ggplot(ryegrass, aes(x=log(conc), y=rootl)) + 
-  geom_point() +
-  geom_ribbon(data=newd, aes(y=p, ymin=pmin, ymax=pmax, colour=NULL), 
-              alpha=0.2) + 
-  geom_line(data=newd, aes(y=p)) + 
-  theme_classic()
 ```
+
+The predicted curves can be displayed by using the plot method.
+```{r ryegrassplot}
+plot(rgm, ndose=50, logx=TRUE)
+```
+
+Using 50 support points on the dose scale results in a nicely smooth curve, but increasing this number increases computation time for the predictions.
 
 
 ## standrc Methods

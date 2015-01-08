@@ -1,4 +1,4 @@
-ED.standrc <- function(object, respLev=NULL){ 
+ED.standrc <- function(object, ..., respLev=NULL){ 
   if (is.null(respLev)) stop("Please provide response levels!")
   plist <- extract(object$stan, pars=object$pars)
   fix <- object$fixed

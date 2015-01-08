@@ -188,7 +188,7 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, priors=standr
                     "}",
                     sep="")
   
-  assign("stancode", stancode, envir=.GlobalEnv)
+  eval(parse(text="assign('stancode', stancode, envir=.GlobalEnv)"))
   fit <- stan(model_code = 'stancode', data = stan_dat, ...)
   
   out <- list()

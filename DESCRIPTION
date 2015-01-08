@@ -7,6 +7,6 @@ Author: Daniel Gerhard
 Maintainer: Daniel Gerhard <00gerhard@gmail.com>
 Description: A simplified user interface to fit specific dose-response models using rstan
 License: GPL-2
-Depends: rstan, drc, nlme
+Depends: rstan, drc, nlme, ggplot2
 Suggests: knitr
 VignetteBuilder: knitr

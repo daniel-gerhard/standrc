@@ -5,10 +5,11 @@
   ED estimates given a standrc object and a vector of response levels.
 }
 \usage{
-  \method{ED}{standrc}(object, respLev)
+  \method{ED}{standrc}(object, ..., respLev)
 }
 \arguments{
   \item{object}{A standrc object}
+  \item{...}{not used here}
   \item{respLev}{a vector of response levels (percentage between 0 and 100)}
 }
 
