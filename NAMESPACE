@@ -1,4 +1,4 @@
-export(standrm, standrm_binary, standrc_priors)
+export(standrm, standrm_binary, standrc_binomial, standrc_priors)
 import(rstan, drc, nlme, ggplot2)
 
 S3method(print, standrc)

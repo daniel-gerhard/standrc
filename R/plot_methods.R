@@ -1,20 +1,22 @@
 plot.standrc <- function(x, ..., ndose=25, logx=FALSE){
+  if (is.null(x$data$total)) xcc <- as.character(x$call$formula[[2]]) else xcc <- as.character("p")
   if (x$curves$J > 1){
     dframe <- data.frame(x$data$y, x$data$x, x$curves$names[x$data$idc])
-    names(dframe) <- c(as.character(x$call$formula[[2]]),
+    names(dframe) <- c(xcc,
                        as.character(x$call$formula[[3]]), 
                        as.character(x$call$curveid[[3]]))
   } else {
     dframe <- data.frame(x$data$y, x$data$x)
-    names(dframe) <- c(as.character(x$call$formula[[2]]),
+    names(dframe) <- c(xcc,
                        as.character(x$call$formula[[3]]))
   }
+  if (!is.null(x$data$total)) dframe[,1] <- dframe[,1]/x$data$total
   
   if (x$curves$J > 1) curvn <- paste(",", as.character(x$call$curveid[[3]]), "=x$curves$names") else curvn=NULL
   if (logx){    
     newd <- eval(parse(text=paste("expand.grid(", as.character(x$call$formula[[3]]), "=exp(seq(log(min(x$data$x)), log(max(x$data$x)), length=ndose))", curvn, ")")))
   } else {
-    newd <- eval(parse(text=paste("expand.grid(", as.character(x$call$formula[[3]]), "=exp(seq(log(min(x$data$x)), log(max(x$data$x)), length=ndose))", curvn, ")")))    
+    newd <- eval(parse(text=paste("expand.grid(", as.character(x$call$formula[[3]]), "=seq(min(x$data$x), max(x$data$x), length=ndose)", curvn, ")")))    
   }
   pm <- predict(x, newdata=newd)
   newd$p <- apply(pm, 2, function(x) mean(x, na.rm=TRUE))
@@ -25,6 +27,6 @@ plot.standrc <- function(x, ..., ndose=25, logx=FALSE){
   if (x$curves$J > 1){
     eval(parse(text=paste("ggplot(dframe, aes(x=",  as.character(x$call$formula[[3]]),", y=", as.character(x$call$formula[[2]]), ", colour=", as.character(x$call$curveid[[3]]),")) +  geom_point() + geom_ribbon(data=newd, aes(y=p, ymin=pmin, ymax=pmax, fill=", as.character(x$call$curveid[[3]]),", colour=NULL), alpha=0.2) + geom_line(data=newd, aes(y=p))", lxt)) ) 
   } else {
-    eval(parse(text=paste("ggplot(dframe, aes(x=",  as.character(x$call$formula[[3]]),", y=", as.character(x$call$formula[[2]]), ")) +  geom_point() + geom_ribbon(data=newd, aes(y=p, ymin=pmin, ymax=pmax), alpha=0.2) + geom_line(data=newd, aes(y=p))", lxt)) ) 
+    eval(parse(text=paste("ggplot(dframe, aes(x=",  as.character(x$call$formula[[3]]),", y=", xcc, ")) +  geom_point() + geom_ribbon(data=newd, aes(y=p, ymin=pmin, ymax=pmax), alpha=0.2) + geom_line(data=newd, aes(y=p))", lxt)) ) 
   }
 }
