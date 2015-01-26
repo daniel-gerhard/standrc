@@ -110,6 +110,15 @@ spm <- standrm(formula=SLOPE ~ DOSE, data=spinach,
 ```
 
 
+## Generalized Dose-Response Models
+
+For non-normal distributed responses the standrc package has several alternatives. Some parameters of the nonlinear model are estimated on a transformed scale, but the results are presented on the original scale of the data.
+
+* **count data**: `standrm_count()` assumes the observed counts to follow a Poisson distribution. The two asymptotes are modelled on the log scale. 
+* **binary data**: `standrm_binary()` takes a vector of success/failure or true/false as the response, assuming a Bernoulli distribution. The asymptotes are modelled on the logit scale $\log(\frac{p}{1-p})$; predictions are made for the probability of observing a success. 
+* **binomial model**: `standrm_binomial()` assumes a Binomial distribution for the number of successess given the total number of observed events. The input is similar to the `glm` function using a matrix with success and failure as a response (`cbind(success, failure)`); the model is then constructed similar to the binary case.
+
+
 ## Model Definition
 
 ### Dose-response functions
@@ -138,7 +147,7 @@ The random effects are modelled by their marginal distributions as
 $$ \tilde{b}_{k} \sim N(0, \sigma_{b}), \quad \sigma_{b} \sim IG(0.001, 0.001) $$
 $$ ... $$
 
-The residuals in the model
+For a Gaussian response the residuals in the model
 $$ y_{i} = f(dose_{i}, b, c, d, e, f) + \epsilon_{i} $$
 are distributed as
 $$ \epsilon_{i} \sim N(0, \sigma_{\epsilon}), \quad \sigma_{\epsilon} \sim IG(0.001, 0.001) $$
