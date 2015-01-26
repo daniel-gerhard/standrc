@@ -79,8 +79,13 @@ standrm_binary <- function(formula, data, fct, curveid=NULL, random=NULL, priors
   rparasig <- c("real<lower=0> sigmasq_slope;", "real<lower=0> sigmasq_lasy;", "real<lower=0> sigmasq_uasy;", "real<lower=0> sigmasq_ed;", "real<lower=0> sigmasq_assym;")
   rparac <- paste(c(rpara[pnlr], rparasig[pnlr]), collapse=" ")
   
-  trap <- c("slope", "1/(1 + exp(-1*lasy))", "1/(1 + exp(-1*uasy))", "ed", "assym")[!isfix]
-  traj <- c("slope[idc[i]]", "1/(1 + exp(-1*lasy[idc[i]]))", "1/(1 + exp(-1*uasy[idc[i]]))", "ed[idc[i]]", "assym[idc[i]]")[!isfix]
+  if (is.null(random)){
+    trap <- c("slope", "1/(1 + exp(-1*lasy))", "1/(1 + exp(-1*uasy))", "ed", "assym")[!isfix]
+    traj <- c("slope[idc[i]]", "1/(1 + exp(-1*lasy[idc[i]]))", "1/(1 + exp(-1*uasy[idc[i]]))", "ed[idc[i]]", "assym[idc[i]]")[!isfix]
+  } else {
+    trap <- c("slope", "lasy", "uasy", "ed", "assym")[!isfix]
+    traj <- c("slope[idc[i]]", "lasy[idc[i]]", "uasy[idc[i]]", "ed[idc[i]]", "assym[idc[i]]")[!isfix]
+  }
   tra <- character(length(fix))
   tra[!isfix] <- sapply(1:length(pnl), function(i) if (pnl[i]) traj[i] else trap[i])
   tra[isfix] <- fix[isfix]
@@ -98,8 +103,8 @@ standrm_binary <- function(formula, data, fct, curveid=NULL, random=NULL, priors
                       "sigma_ed <- sqrt(sigmasq_ed);",
                       "sigma_assym <- sqrt(sigmasq_assym);")[pnlr], collapse=" ")
     trar <- c(paste("(", tra[1], " + rslope[idr[i]] )"), 
-              paste("(1/(1 + exp(-1*(", tra[2], " + rlasy[idr[i]] )))"), 
-              paste("(1/(1 + exp(-1*(", tra[3], " + ruasy[idr[i]] )))"), 
+              paste("(1/(1 + exp(-1*(", tra[2], " + rlasy[idr[i]] ))))"), 
+              paste("(1/(1 + exp(-1*(", tra[3], " + ruasy[idr[i]] ))))"), 
               paste("(", tra[4], " + red[idr[i]] )"), 
               paste("(", tra[5], " + rassym[idr[i]] )"))
     trc <- sapply(1:length(tra), function(i) if (pnlr[i]) trar[i] else tra[i])    
