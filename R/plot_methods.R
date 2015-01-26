@@ -1,4 +1,4 @@
-plot.standrc <- function(x, ..., ndose=25, logx=FALSE){
+plot.standrc <- function(x, ..., ndose=25, logx=FALSE, lim=NULL){
   if (is.null(x$data$total)) xcc <- as.character(x$call$formula[[2]]) else xcc <- as.character("p")
   if (x$curves$J > 1){
     dframe <- data.frame(x$data$y, x$data$x, x$curves$names[x$data$idc])
@@ -18,10 +18,18 @@ plot.standrc <- function(x, ..., ndose=25, logx=FALSE){
   } else {
     curvn=NULL
   }
-  if (logx){    
-    newd <- eval(parse(text=paste("expand.grid(", as.character(x$call$formula[[3]]), "=exp(seq(log(min(x$data$x)), log(max(x$data$x)), length=ndose))", curvn, ")")))
+  if (is.null(lim)){
+    minx <- min(x$data$x)
+    maxx <- max(x$data$x)
   } else {
-    newd <- eval(parse(text=paste("expand.grid(", as.character(x$call$formula[[3]]), "=seq(min(x$data$x), max(x$data$x), length=ndose)", curvn, ")")))    
+    if (length(lim) != 2) stop("Please provide limits as vector with 2 elements.")
+    minx <- lim[1]
+    maxx <- lim[2]
+  }
+  if (logx){    
+    newd <- eval(parse(text=paste("expand.grid(", as.character(x$call$formula[[3]]), "=exp(seq(log(", minx, "), log(", maxx, "), length=ndose))", curvn, ")")))
+  } else {
+    newd <- eval(parse(text=paste("expand.grid(", as.character(x$call$formula[[3]]), "=seq(", minx, ", ", maxx, ", length=ndose)", curvn, ")")))    
   }
   pm <- predict(x, newdata=newd)
   newd$p <- apply(pm, 2, function(x) mean(x, na.rm=TRUE))
