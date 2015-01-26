@@ -41,8 +41,12 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, priors=standr
   N <- nrow(mf) 
   y <- mf[,1]
   x <- mf[,2]   
-  if (fct$name %in% c("LL.5", "LL.4", "LL.3", "W1.4", "W1.3", "W2.4", "W2.3", "LN.4", "LN.3")) x[x == 0] <- 0.5*min(x[x > 0])
-  if (fct$name %in% c("LL.4", "LL.3", "L.4", "L.3")) fix[5] <- 0
+  if (fct$name %in% c("LL.5", "LL.4", "LL.3", "W1.4", "W1.3", "W2.4", "W2.3", "LN.4", "LN.3", "MM.2", "MM.3")) x[x == 0] <- 0.5*min(x[x > 0])
+  if (fct$name %in% c("LL.4", "LL.3", "L.4", "L.3", "MM.2", "MM.3")) fix[5] <- 0
+  if (fct$name %in% c("MM.2", "MM.3")){
+    fix[1] <- 0
+    fct$name <- "LL.5"
+  } 
   
   if (is.null(priors$pb)) pb <- rep(0, jv[1])  
   if (mean(y[x == min(x)]) < mean(y[x == max(x)])){
