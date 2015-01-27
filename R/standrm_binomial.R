@@ -96,7 +96,7 @@ standrm_binomial <- function(formula, data, fct, curveid=NULL, random=NULL, prio
     if (fct$name %in% c("L.5", "L.4", "L.3")) trans <- paste("for(i in 1:N){ mu[i] <-", tra[2], " + (", tra[3], "-", tra[2], ") / (1 + exp(-exp(", tra[1], ") * (x[i] - ", tra[4], ")))^exp(", tra[5], ");}", collapse="")
     if (fct$name %in% c("W1.4", "W1.3")) trans <- paste("for(i in 1:N){ mu[i] <-", tra[2], " + (", tra[3], "-", tra[2], ") * exp(-exp(-exp(", tra[1], ") * (log(x[i]) - log(", tra[4], "))));}", collapse="")
     if (fct$name %in% c("W2.4", "W2.3")) trans <- paste("for(i in 1:N){ mu[i] <-", tra[2], " + (", tra[3], "-", tra[2], ") * (1 - exp(-exp(-exp(", tra[1], ") * (log(x[i]) - log(", tra[4], ")))));}", collapse="")
-    if (fct$name %in% c("LN.4", "LN.3")) trans <- paste("for(i in 1:N){ mu[i] <-", tra[2], " + (", tra[3], "-", tra[2], ") * normal_cdf(-exp(", tra[1], ") * (log(x[i]) - log(", tra[4], ")), 0, 1);}", collapse="")
+    if (fct$name %in% c("LN.4", "LN.3")) trans <- paste("for(i in 1:N){ mu[i] <-", tra[2], " + (", tra[3], "-", tra[2], ") * normal_cdf(exp(", tra[1], ") * (log(x[i]) - log(", tra[4], ")), 0, 1);}", collapse="")
   } else {
     stra <- paste(c("real<lower=0> sigma_slope;", "real<lower=0> sigma_lasy;", "real<lower=0> sigma_uasy;", "real<lower=0> sigma_ed;", "real<lower=0> sigma_assym;")[pnlr], collapse=" ")
     strasq <- paste(c("sigma_slope <- sqrt(sigmasq_slope);",
@@ -114,7 +114,7 @@ standrm_binomial <- function(formula, data, fct, curveid=NULL, random=NULL, prio
     if (fct$name %in% c("L.5", "L.4", "L.3")) trans <- paste(stra, strasq, "for(i in 1:N){ mu[i] <-", trc[2], " + (", trc[3], "-", trc[2], ") / (1 + exp(-exp(", trc[1], ") * (x[i] -", trc[4], ")))^exp(", trc[5], ");}", collapse="")
     if (fct$name %in% c("W1.4", "W1.3")) trans <- paste(stra, strasq, "for(i in 1:N){ mu[i] <-", trc[2], " + (", trc[3], "-", trc[2], ") * exp(-exp(-exp(", trc[1], ") * (log(x[i]) - log(", trc[4], "))));}", collapse="")
     if (fct$name %in% c("W2.4", "W2.3")) trans <- paste(stra, strasq, "for(i in 1:N){ mu[i] <-", trc[2], " + (", trc[3], "-", trc[2], ") * (1 - exp(-exp(-exp(", trc[1], ") * (log(x[i]) - log(", trc[4], ")))));}", collapse="")
-    if (fct$name %in% c("LN.4", "LN.3")) trans <- paste(stra, strasq, "for(i in 1:N){ mu[i] <-", trc[2], " + (", trc[3], "-", trc[2], ") * normal_cdf(-exp(", trc[1], ") * (log(x[i]) - log(", trc[4], ")), 0, 1);}", collapse="")
+    if (fct$name %in% c("LN.4", "LN.3")) trans <- paste(stra, strasq, "for(i in 1:N){ mu[i] <-", trc[2], " + (", trc[3], "-", trc[2], ") * normal_cdf(exp(", trc[1], ") * (log(x[i]) - log(", trc[4], ")), 0, 1);}", collapse="")
   }
   
   ### population parameters

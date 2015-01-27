@@ -1,11 +1,13 @@
 \name{plot.standrc}
 \alias{plot.standrc}
+\alias{maplot}
 \title{Plot fitted dose-response curves}
 \description{
   Plot of the predicted dose-response curves given a standrc object
 }
 \usage{
   \method{plot}{standrc}(x, ..., ndose=25, logx=FALSE, lim=NULL)
+maplot(x, ..., ndose=25, logx=FALSE, lim=NULL)
 }
 \arguments{
   \item{x}{A standrc object}

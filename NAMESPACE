@@ -1,4 +1,4 @@
-export(standrm, standrm_binary, standrm_binomial, standrm_count, standrc_priors, waic)
+export(standrm, standrm_binary, standrm_binomial, standrm_count, standrc_priors, waic, maED, mapredict, maplot)
 import(rstan, drc, nlme, ggplot2)
 
 S3method(print, standrc)
