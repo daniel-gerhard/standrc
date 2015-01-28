@@ -14,11 +14,16 @@ maED <- function(object, ..., respLev=NULL){
   names(wi) <- mnames
 
   nl <- length(respLev)  
-  edl <- lapply(1:length(wi), function(i) lapply(ED(mllist[[i]], respLev=respLev), function(x) x*wi[i]))
-  EDlist <- edl[[1]]
-  for (i in 2:length(mllist)){
-    EDlist <- lapply(1:length(EDlist), function(j) apply(EDlist[[j]], 2, sort) + apply(edl[[i]][[j]], 2, sort))
-  }  
+  edl <- lapply(1:length(wi), function(i) lapply(ED(mllist[[i]], respLev=respLev), function(x) x))
+  iter <- nrow(edl[[1]][[1]])
+  EDlist <- lapply(1:nl, function(i){
+    t(rbind(sapply(1:iter, function(j){
+      id <- sample(1:length(wi), 1, prob=wi)
+      edl[[id]][[i]][j,]
+    })))
+  })
+
+  
   names(EDlist) <- respLev
   class(EDlist) <- "EDsamp"
   return(EDlist)  
@@ -38,10 +43,12 @@ mapredict <- function(object, ..., newdata=NULL){
   mnames <- as.character(Call[-1L])[isstandrc]
   names(wi) <- mnames
   
-  pred <- wi[1]*predict(mllist[[1]], newdata=newdata)
-  for (i in 2:length(modellist)){
-    pred <- apply(pred, 2, sort) + apply(wi[i]*predict(mllist[[i]], newdata=newdata), 2, sort)
-  }
+  predlist <- lapply(mllist, function(ll) predict(ll, newdata=newdata))
+  iter <- nrow(predlist[[1]])
+  pred <- t(sapply(1:iter, function(j){
+    id <- sample(1:length(wi), 1, prob=wi)
+    predlist[[id]][j,]
+  }))
   return(pred)
 }
 
