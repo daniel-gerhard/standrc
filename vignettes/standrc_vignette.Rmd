@@ -152,6 +152,18 @@ $$ y_{i} = f(dose_{i}, b, c, d, e, f) + \epsilon_{i} $$
 are distributed as
 $$ \epsilon_{i} \sim N(0, \sigma_{\epsilon}), \quad \sigma_{\epsilon} \sim IG(0.001, 0.001) $$
 
+For a binary response the model
+$$ \mu_{i} = f(dose_{i}, b, \mbox{inv_logit}(c), \mbox{inv_logit}(d), e, f) $$
+with
+$$ y_{i} \sim Bernoulli(\mu_{i})$$
+is assumed. The Binomial model is defined as
+$$ y_{i} \sim Binomial(N, \mu_{i}) $$
+with $N$ denoting the total number of events, including the Bernoulli model with $N=1$.
+
+When count data is observed, the model
+$$ \mu_{i} = f(dose_{i}, b, \exp(c), \exp(d), e, f) \quad \mbox{with} \quad y_{i} \sim Poisson(\mu_{i})$$
+can be chosen.
+
 
 ## standrc objects
 
