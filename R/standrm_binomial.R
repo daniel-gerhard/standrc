@@ -45,16 +45,16 @@ standrm_binomial <- function(formula, data, fct, curveid=NULL, random=NULL, prio
   if (fct$name %in% c("LL.5", "LL.4", "LL.3", "W1.4", "W1.3", "W2.4", "W2.3", "LN.4", "LN.3")) x[x == 0] <- 0.5*min(x[x > 0])
   if (fct$name %in% c("LL.4", "LL.3", "L.4", "L.3")) fix[5] <- 0
   
-  if (is.null(priors$pb)) pb <- rep(0, jv[1])  
+  if (is.null(priors$pb)) pb <- rep(0, jv[1]) else pb <- priors$pb
   if (mean(y1[x == min(x)]/(y1[x == min(x)] + y2[x == min(x)])) < mean(y1[x == max(x)] / (y1[x == max(x)] + y2[x == max(x)]))){
-    if (is.null(priors$pc)) pc <- rep(-10, jv[2])
-    if (is.null(priors$pd)) pd <- rep(10, jv[3])
+    if (is.null(priors$pc)) pc <- rep(-10, jv[2]) else pc <- priors$pc
+    if (is.null(priors$pd)) pd <- rep(10, jv[3]) else pd <- priors$pd
   } else {
-    if (is.null(priors$pd)) pd <- rep(-10, jv[3])
-    if (is.null(priors$pc)) pc <- rep(10, jv[2])
+    if (is.null(priors$pd)) pd <- rep(-10, jv[3]) else pd <- priors$pd
+    if (is.null(priors$pc)) pc <- rep(10, jv[2]) else pc <- priors$pc
   }  
-  if (is.null(priors$pe)) pe <- rep(median(x), jv[4])
-  if (is.null(priors$pf)) pf <- rep(0, jv[5])
+  if (is.null(priors$pe)) pe <- rep(median(x), jv[4]) else pe <- priors$pe
+  if (is.null(priors$pf)) pf <- rep(0, jv[5]) else pf <- priors$pf
   
   stan_dat <- list(N=N, J=J, K=K, idc=idc, idr=idr, y=y1, total=y1+y2, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf)
   if (is.null(curveid)) stan_dat <- list(N=N, K=K, idr=idr, y=y1, total=y1+y2, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf)

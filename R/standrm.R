@@ -48,16 +48,16 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, priors=standr
     fct$name <- "LL.5"
   } 
   
-  if (is.null(priors$pb)) pb <- rep(0, jv[1])  
+  if (is.null(priors$pb)) pb <- rep(0, jv[1]) else pb <- priors$pb
   if (mean(y[x == min(x)]) < mean(y[x == max(x)])){
-    if (is.null(priors$pc)) pc <- rep(min(y), jv[2])
-    if (is.null(priors$pd)) pd <- rep(max(y), jv[3])
+    if (is.null(priors$pc)) pc <- rep(min(y), jv[2]) else pc <- priors$pc
+    if (is.null(priors$pd)) pd <- rep(max(y), jv[3]) else pd <- priors$pd
   } else {
-    if (is.null(priors$pd)) pd <- rep(min(y), jv[3])
-    if (is.null(priors$pc)) pc <- rep(max(y), jv[2])
+    if (is.null(priors$pd)) pd <- rep(min(y), jv[3]) else pd <- priors$pd
+    if (is.null(priors$pc)) pc <- rep(max(y), jv[2]) else pc <- priors$pc
   }  
-  if (is.null(priors$pe)) pe <- rep(median(x), jv[4])
-  if (is.null(priors$pf)) pf <- rep(0, jv[5])
+  if (is.null(priors$pe)) pe <- rep(median(x), jv[4]) else pe <- priors$pe
+  if (is.null(priors$pf)) pf <- rep(0, jv[5]) else pf <- priors$pf
   
   stan_dat <- list(N=N, J=J, K=K, idc=idc, idr=idr, y=y, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf)
   if (is.null(curveid)) stan_dat <- list(N=N, K=K, idr=idr, y=y, x=x, pb=pb, pc=pc, pd=pd, pe=pe, pf=pf)
