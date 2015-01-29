@@ -27,7 +27,8 @@ The input is structured as
 The ryegrass dataset of package drc provides a simple example, fitting a four parameter log-logistic model. The asymmetry parametr is fixed at 0, resulting in a symmetric curve, as it is defined on the log-scale, in contrast to the drc parameterization, where it is modelled without any tranformation.
 ```{r ryegrassLL4, eval=FALSE}
 rgm <- standrm(rootl ~ conc, data=ryegrass,
-               fct=LL.5(fixed=c(NA, NA, NA, NA, 0)))
+               fct=LL.5(fixed=c(NA, NA, NA, NA, 0)),
+               iter=5000)
 ```
 
 ```{r ryegrassLL4eval, results='hide', message=FALSE, echo=FALSE}
@@ -54,7 +55,7 @@ newd$pmax <- apply(pm, 2, function(x) quantile(x, 0.975, na.rm=TRUE))
 ```
 
 The predicted curves can be displayed by using the plot method.
-```{r ryegrassplot}
+```{r ryegrassplot, fig.height=5, fig.width=7}
 plot(rgm, ndose=50, logx=TRUE)
 ```
 
@@ -105,8 +106,20 @@ Especially the random effects require a high number of parameters, which can be 
 spm <- standrm(formula=SLOPE ~ DOSE, data=spinach, 
                fct=LL.5(fixed=c(NA, NA, 0, NA, 0)),
                curveid=c + e ~ HERBICIDE,
-               random=b + c + d + e ~ CURVE,
+               random=c + d + e ~ CURVE,
                iter=10000)
+```
+
+```{r spinacheval, results='hide', message=FALSE, echo=FALSE}
+spm <- standrm(formula=SLOPE ~ DOSE, data=spinach, 
+               fct=LL.5(fixed=c(NA, NA, 0, NA, 0)),
+               curveid=c + e ~ HERBICIDE,
+               random=c + d + e ~ CURVE,
+               iter=10000)
+```
+
+```{r spinachplot, message=FALSE, warning=FALSE, fig.height=5, fig.width=7}
+plot(spm, ndose=50, logx=TRUE)
 ```
 
 
@@ -117,6 +130,116 @@ For non-normal distributed responses the standrc package has several alternative
 * **count data**: `standrm_count()` assumes the observed counts to follow a Poisson distribution. The two asymptotes are modelled on the log scale. 
 * **binary data**: `standrm_binary()` takes a vector of success/failure or true/false as the response, assuming a Bernoulli distribution. The asymptotes are modelled on the logit scale $\log(\frac{p}{1-p})$; predictions are made for the probability of observing a success. 
 * **binomial model**: `standrm_binomial()` assumes a Binomial distribution for the number of successess given the total number of observed events. The input is similar to the `glm` function using a matrix with success and failure as a response (`cbind(success, failure)`); the model is then constructed similar to the binary case.
+
+
+### earthworms: Binomial example
+
+The dataset is obtained from a toxicity test using earthworms, and it contains the number of earthworms remaining in a container that is contaminated with a toxic substance (not disclosed) and not migrating to the neighbouring uncontaminated container).
+
+A four parameter Weibull model is assumed for the probability of observing an earthworm in the contaminated container. The number of remaining earthworms is assumed to follow a Binomial distribution, providing a matrix with remaining and migrated earthworms as a response. The lower and upper asymptotes are fixed at 1 and 0, assuming that all earthworms are in the contaminated container at dose 0 and all of them will be migrated at a high dose level.
+
+```{r earthworms, eval=FALSE}
+ew <- standrm_binomial(formula=cbind(number, total-number) ~ dose, 
+                       data=earthworms, 
+                       fct=W1.4(fixed=c(NA, 1, 0, NA)), iter=5000)
+```
+
+```{r earthwormseval, results='hide', message=FALSE, echo=FALSE}
+ew <- standrm_binomial(formula=cbind(number, total-number) ~ dose, 
+                       data=earthworms, 
+                       fct=W1.4(fixed=c(NA, 1, 0, NA)), iter=5000)
+```
+
+```{r earthwormsplot, fig.height=5, fig.width=7}
+plot(ew, logx=TRUE)
+```
+
+
+## Watanabe-Akaike Information Criterion
+
+In order to compare two different model fits the WAIC is implemented in the function `waic()` according to Vehtari and Gelman (2014). For more information see WAIC and cross-validation in STAN at http://www.stat.columbia.edu/~gelman/research/unpublished/.
+
+
+## Model averaging
+
+Given a set of models the WAICs can be transformed into model weights $\omega_{i}$ by
+$$ \omega_{i} = \frac{\exp(-0.5 \Delta_{i})}{\sum_{i}\exp(-0.5 \Delta_{i})} \qquad \Delta_{i} = WAIC_{i} - \min_{i}(WAIC_{i})$$
+By treating these model weights as model probabilities they can be used for model averaging.
+Given $B$ samples from the posterior distribution of the parameter of interest, the samples from the posterior of the model-averaged parameter consist of a random draw of $\omega_{i} \times B$ samples from the $i$th model in the set, treating $\omega_{i}$ as the probability that the $b$th posterior sample is obtained from the $i$th model.
+
+The functions `maED()` and `mapredict()` can be used to calculate model-averaged effective dose parameters and model-averaged predictions, which can be directly plotted by function `maplot()`. All model-averaging functions use several standrc model objects as input together with the arguments, that are available in the single-model functions.
+
+
+### Sinapis alba example
+
+Data are from an experiment, comparing the potency of the two herbicides glyphosate and bentazone in white mustard *Sinapis alba*.
+
+Thre models are fitted:
+
+* a four-parameter log-logistic model with different asymptotes, slopes, and ED50 parameters for each herbicide
+* a four-parameter log-logistic model assuming the same asymptotes for both herbicides
+* a four-parameter Weibull model with the same asymptotes for both herbicides
+
+```{r Salba, eval=FALSE}
+m1 <- standrm(DryMatter ~ Dose, data=S.alba, curveid=b + c + d + e ~ Herbicide, fct=LL.4(), iter=5000)
+m2 <- standrm(DryMatter ~ Dose, data=S.alba, curveid=b + e ~ Herbicide, fct=LL.4(), iter=5000)
+m3 <- standrm(DryMatter ~ Dose, data=S.alba, curveid=b + e ~ Herbicide, fct=W1.4(), iter=5000)
+```
+
+```{r Salbaeval, results='hide', message=FALSE, echo=FALSE}
+m1 <- standrm(DryMatter ~ Dose, data=S.alba, curveid=b + c + d + e ~ Herbicide, fct=LL.4(), iter=5000)
+m2 <- standrm(DryMatter ~ Dose, data=S.alba, curveid=b + e ~ Herbicide, fct=LL.4(), iter=5000)
+m3 <- standrm(DryMatter ~ Dose, data=S.alba, curveid=b + e ~ Herbicide, fct=W1.4(), iter=5000)
+```
+
+The WAIC weights can be calculated by
+```{r modelweights}
+modellist <- list(m1, m2, m3)
+inc <- sapply(modellist, function(x) waic(x)$waic)
+d <- inc-min(inc)
+round(exp(-0.5*d)/sum(exp(-0.5*d)), 3)
+```
+which are used to present the following plot of the predicted, model-averaged curves.
+```{r maplot, fig.height=5, fig.width=7}
+maplot(m1, m2, m3, logx=TRUE, ndose=100)
+```
+
+E.g. the ED10 can be calculated by
+```{r ED10}
+maED(m1, m2, m3, respLev=10)
+```
+
+
+## Informative prior distributions
+
+Choosing prior distributions in an automated fashion has its limits, especially for nonlinear models. Prior means for the asymptotes are found empirically based on the data, assuming weakly informative prior distributions with very long tails.
+
+In order to include reasonable informative priors in the model, a named list with stan code entries can be supplied with the argument `priors=`. This list is automatically constructed by function `standrc_priors()` with default values for each parameter in the model. 
+
+Let us assume we have some prior information about parameters in the ryegrass example that was introduced at the beginning of the vignette. Like for the default we assume normal distributions for the parameters, but specifying a mean of 0 and standard deviation of 2 (on the logarithmic scale) for the asymmetry parameter and means 0 and 10 and std.dev. of 1 for the asymptotes. The definition of numeric entries for the mean allows also to provide vectors of means for several curves. The priors for the variance parameters are defined accordingly. 
+
+```{r ryegrassLL5, eval=FALSE}
+rgp <- standrm(rootl ~ conc, data=ryegrass,
+               fct=LL.5(fixed=c(NA, NA, NA, NA, NA)),
+               priors=standrc_priors(f="normal(pf, 2)", pf=0,
+                                     c="normal(pc, 1)", pc=10,
+                                     d="normal(pd, 1)", pd=0),
+               iter=5000)
+```
+
+```{r ryegrassLL5eval, results='hide', message=FALSE, echo=FALSE}
+library(standrc)
+rgp <- standrm(rootl ~ conc, data=ryegrass,
+               fct=LL.5(fixed=c(NA, NA, NA, NA, NA)),
+               priors=standrc_priors(f="normal(pf, 2)", pf=0,
+                                     c="normal(pc, 1)", pc=10,
+                                     d="normal(pd, 1)", pd=0),
+               iter=5000)
+```
+
+```{r plotryegrassLL5, fig.height=5, fig.width=7}
+plot(rgp, logx=TRUE, ndose=100)
+```
 
 
 ## Model Definition
