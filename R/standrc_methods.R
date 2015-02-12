@@ -39,8 +39,8 @@ predict.standrc <- function(object, ..., newdata=NULL){
     })
   })
   if (attr(object$fct, "class") == "fp-logistic"){
-    p1 <- get("p1", environment(fct$fct))
-    p2 <- get("p2", environment(fct$fct))    
+    p1 <- get("p1", environment(object$fct$fct))
+    p2 <- get("p2", environment(object$fct$fct))    
   }  
   pred <- sapply(1:length(x), function(i){
     apply(samp[[as.numeric(idc)[i]]], 1, function(xp){
@@ -49,7 +49,7 @@ predict.standrc <- function(object, ..., newdata=NULL){
       if (object$fct$name %in% c("W1.4", "W1.3")) return(xp[2] + (xp[3] - xp[2]) * exp(-exp(-exp(xp[1]) * (log(x[i]) - log(xp[4])))))
       if (object$fct$name %in% c("W2.4", "W2.3")) return(xp[2] + (xp[3] - xp[2]) * (1 - exp(-exp(-exp(xp[1]) * (log(x[i]) - log(xp[4]))))))
       if (object$fct$name %in% c("LN.4", "LN.3")) return(xp[2] + (xp[3] - xp[2]) * pnorm(exp(xp[1]) * (log(x[i]) - log(xp[4]))))
-      if (attr(object$fct, "class") == "fp-logistic") return(xp[2] + (xp[3] - xp[2]) / (1 + exp(-exp(xp[1]) * log(x[i] + 1)^p1 + xp[4] * log(x[i] + 1)^xp)))
+      if (attr(object$fct, "class") == "fp-logistic") return(xp[2] + (xp[3] - xp[2]) / (1 + exp(-exp(xp[1]) * log(x[i] + 1)^p1 + xp[4] * log(x[i] + 1)^p2)))
     })
   })
   return(pred)
