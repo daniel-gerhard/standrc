@@ -32,7 +32,7 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, priors=standr
   }
  
   fix <- fct$fixed
-  if (fct$name %in% c("W1.4", "W1.3", "W2.4", "W2.3", "LN.4", "LN.3")) fix <- c(fix, 0)  
+  if (fct$name %in% c("W1.4", "W1.3", "W2.4", "W2.3", "LN.4", "LN.3") | attr(fct, "class") == "fp-logistic") fix <- c(fix, 0)  
   isfix <- !is.na(fix)
   
   jv <- rep(J, 5)
@@ -41,12 +41,16 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, priors=standr
   N <- nrow(mf) 
   y <- mf[,1]
   x <- mf[,2]   
-  if (fct$name %in% c("LL.5", "LL.4", "LL.3", "W1.4", "W1.3", "W2.4", "W2.3", "LN.4", "LN.3", "MM.2", "MM.3")) x[x == 0] <- 0.5*min(x[x > 0])
-  if (fct$name %in% c("LL.4", "LL.3", "L.4", "L.3", "MM.2", "MM.3")) fix[5] <- 0
+  if (fct$name %in% c("LL.5", "LL.4", "LL.3", "W1.4", "W1.3", "W2.4", "W2.3", "LN.4", "LN.3", "MM.2", "MM.3") | attr(fct, "class") == "fp-logistic") x[x == 0] <- 0.5*min(x[x > 0])
+  if (fct$name %in% c("LL.4", "LL.3", "L.4", "L.3", "MM.2", "MM.3") | attr(fct, "class") == "fp-logistic") fix[5] <- 0
   if (fct$name %in% c("MM.2", "MM.3")){
     fix[1] <- 0
     fct$name <- "LL.5"
   } 
+  if (attr(fct, "class") == "fp-logistic"){
+    p1 <- get("p1", environment(fct$fct))
+    p2 <- get("p2", environment(fct$fct))    
+  }
   
   if (is.null(priors$pb)) pb <- rep(0, jv[1]) else pb <- priors$pb
   if (mean(y[x == min(x)]) < mean(y[x == max(x)])){
@@ -94,6 +98,7 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, priors=standr
     if (fct$name %in% c("W1.4", "W1.3")) trans <- paste("sigma_y <- sqrt(sigmasq_y); for(i in 1:N){ mu[i] <-", tra[2], " + (", tra[3], "-", tra[2], ") * exp(-exp(-exp(", tra[1], ") * (log(x[i]) - log(", tra[4], "))));}", collapse="")
     if (fct$name %in% c("W2.4", "W2.3")) trans <- paste("sigma_y <- sqrt(sigmasq_y); for(i in 1:N){ mu[i] <-", tra[2], " + (", tra[3], "-", tra[2], ") * (1 - exp(-exp(-exp(", tra[1], ") * (log(x[i]) - log(", tra[4], ")))));}", collapse="")
     if (fct$name %in% c("LN.4", "LN.3")) trans <- paste("sigma_y <- sqrt(sigmasq_y); for(i in 1:N){ mu[i] <-", tra[2], " + (", tra[3], "-", tra[2], ") * normal_cdf(exp(", tra[1], ") * (log(x[i]) - log(", tra[4], ")), 0, 1);}", collapse="")
+    if (attr(fct, "class") == "fp-logistic") trans <- paste("sigma_y <- sqrt(sigmasq_y); for(i in 1:N){ mu[i] <-", tra[2], " + (", tra[3], "-", tra[2], ") / (1 + exp(-exp(", tra[1], ") * log(x[i] + 1)^", p1," + ", tra[4], "* log(x[i] + 1)^", p2,"));}", collapse="")
   } else {
     stra <- paste(c("real<lower=0> sigma_slope;", "real<lower=0> sigma_lasy;", "real<lower=0> sigma_uasy;", "real<lower=0> sigma_ed;", "real<lower=0> sigma_assym;")[pnlr], collapse=" ")
     strasq <- paste(c("sigma_slope <- sqrt(sigmasq_slope);",
@@ -112,6 +117,7 @@ standrm <- function(formula, data, fct, curveid=NULL, random=NULL, priors=standr
     if (fct$name %in% c("W1.4", "W1.3")) trans <- paste(stra, strasq, "sigma_y <- sqrt(sigmasq_y); for(i in 1:N){ mu[i] <-", trc[2], " + (", trc[3], "-", trc[2], ") * exp(-exp(-exp(", trc[1], ") * (log(x[i]) - log(", trc[4], "))));}", collapse="")
     if (fct$name %in% c("W2.4", "W2.3")) trans <- paste(stra, strasq, "sigma_y <- sqrt(sigmasq_y); for(i in 1:N){ mu[i] <-", trc[2], " + (", trc[3], "-", trc[2], ") * (1 - exp(-exp(-exp(", trc[1], ") * (log(x[i]) - log(", trc[4], ")))));}", collapse="")
     if (fct$name %in% c("LN.4", "LN.3")) trans <- paste(stra, strasq, "sigma_y <- sqrt(sigmasq_y); for(i in 1:N){ mu[i] <-", trc[2], " + (", trc[3], "-", trc[2], ") * normal_cdf(exp(", trc[1], ") * (log(x[i]) - log(", trc[4], ")), 0, 1);}", collapse="")
+    if (attr(fct, "class") == "fp-logistic") trans <- paste("sigma_y <- sqrt(sigmasq_y); for(i in 1:N){ mu[i] <-", trc[2], " + (", trc[3], "-", trc[2], ") / (1 + exp(-exp(", trc[1], ") * log(x[i] + 1)^", p1," + ", trc[4], "* log(x[i] + 1)^", p2,"));}", collapse="")
   }
   
   ### population parameters
